@@ -1,0 +1,50 @@
+﻿
+@{
+    ViewBag.Title = "AddStory";
+}
+
+<h2>编辑故事信息</h2>
+<form id="form">
+    id:     <input name="id" id="id"/><br />
+    choice: <input name="choice" value="" /><br/>
+    type:   <input name="type" value="" /><br />
+    title:  <input name="title" value="" /><br />
+    content:<input name="content" value="" /><br />
+    方图:   <input type="file" name="img_square" />
+    长图:   <input type="file" name="img_rectangle"/>
+    MP3:    <input type="file" name="mp3" />
+    <button type="button" id="submit">提交</button>
+</form>
+
+<button type="button" id="delete">删除</button>
+
+@section scripts{
+    <script>
+        $("#submit").on("click", function () {
+            var formData = new FormData($("#form")[0]);
+            $.ajax({
+                url: "http://localhost:51650/api/ChildStory/ChildStory/AddOrUpdateStoryInstance",
+                type: "POST",
+                data: formData,
+                processData: false,  // 告诉jQuery不要去处理发送的数据
+                contentType: false,   // 告诉jQuery不要去设置Content-Type请求头
+                success: function (responseText) {
+                    alert(responseText.message);
+                }
+            });
+        });
+
+        $("#delete").on("click", function () {
+            var id = $("#id").val();
+            $.ajax({
+                url: "http://localhost:51650/api/ChildStory/ChildStory/DelStorys?ids="+id,
+                type: "POST",
+                processData: false,  // 告诉jQuery不要去处理发送的数据
+                contentType: false,   // 告诉jQuery不要去设置Content-Type请求头
+                success: function (responseText) {
+                    alert(responseText.message);
+                }
+            });
+        });
+    </script>
+    }

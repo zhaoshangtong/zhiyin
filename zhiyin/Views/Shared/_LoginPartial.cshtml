@@ -1,0 +1,24 @@
+﻿@using Rays.Model
+@model Rays.Model.api_user
+@if (Model != null)
+{
+    using (Html.BeginForm("LogOut", "Users", new { Area = "Users" }, FormMethod.Post, new { id = "logoutForm", @class = "navbar-right" }))
+    {
+        @Html.AntiForgeryToken()
+
+        <ul class="nav navbar-nav navbar-right">
+            <li>@Html.ActionLink("API文档", "Index", "Help", new {area = ""}, null)</li>
+            <li>
+                @Html.ActionLink("你好，" + Model.username + "!", "Index", "Default", new {Area = "Manage"}, htmlAttributes: new {title = "后台管理"})
+            </li>
+            <li><a href="javascript:document.getElementById('logoutForm').submit()">注销</a></li>
+        </ul>
+    }
+}
+else
+{
+    <ul class="nav navbar-nav navbar-right">
+        <li>@Html.ActionLink("注册", "Register", "Users", new { Area = "Users" }, htmlAttributes: new { id = "registerLink" })</li>
+        <li>@Html.ActionLink("登录", "Login", "Users", new { Area = "Users" }, htmlAttributes: new { id = "loginLink" })</li>
+    </ul>
+}

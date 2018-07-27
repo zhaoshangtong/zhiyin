@@ -1,0 +1,52 @@
+﻿
+@{
+    ViewBag.Title = "TestSimpleDraw";
+}
+
+<h2>TestSimpleDraw</h2>
+<form id="login">
+    <button id="submit">登陆</button>
+    <button id="nosubmit">直接请求</button>
+</form>
+@section scripts{
+    <script>
+        $(function () {
+            $("#submit").on("click", function () {
+                $.ajax({
+                    url: "http://localhost:51650/api/ChildStory/ChildStory/LoginIn?user_name=whtlkj&password=whtlkj",
+                    type: "post",
+                    data: {},
+                    dataType: "json",
+                    
+                    success: function (responseText) {
+                        alert(responseText.message);
+                    }
+                });
+            });
+            $("#nosubmit").on("click", GetSowingMapInfoForAdmin);
+        });
+
+        var GetSowingMapInfoForAdmin=function () {
+            $.ajax({
+                url: "http://listening.test.codebook.com.cn/api/ChildStory/ChildStory/GetSowingMapInfoForAdmin",
+                type: "get",
+                data: {},
+                dataType: "json",
+                beforeSend: function (xhr) {
+                    // //发送ajax请求之前向http的head里面加入验证信息
+                    xhr.setRequestHeader("key", "whtlkj"); // 请求发起前在头部附加token
+                    xhr.setRequestHeader("sign", "7947A4C52E9BFE0E712CA23D54BD7040");
+                    xhr.setRequestHeader("timestamp", 1525431655);
+                },
+                success: function (responseText) {
+                    alert(responseText);
+                },
+                error: function (error) {
+
+                }
+            });
+        }
+
+        
+    </script>
+    }

@@ -1,0 +1,49 @@
+﻿
+@{
+    ViewBag.Title = "TestSocket";
+}
+
+<h2>TestSocket</h2>
+<form id="sendForm">
+    <input id="sendText" placeholder="Text to send"/>
+    <pre id="incomming"></pre>
+</form>
+@section scripts{
+    <script type="text/javascript">
+        var start = function () {
+            var inc = document.getElementById('incomming');
+            var wsImpl = window.WebSocket || window.MozWebSocket;
+            var form = document.getElementById('sendForm');
+            var input = document.getElementById('sendText');
+
+            inc.innerHTML += "connecting to server ..<br/>";
+
+            // 创建新的websocket新连接端口为172.18.173.120/114.215.110.243
+            window.ws = new wsImpl('ws://39.105.25.109:10000');
+
+            // 当数据从服务器服务中心发送后，继续向下运行过程
+            ws.onmessage = function (evt) {
+                inc.innerHTML += evt.data + '<br/>';
+            };
+
+            // 当链接对象找到服务端成功对接后，提示正常打开
+            ws.onopen = function () {
+                inc.innerHTML += '.. connection open<br/>';
+            };
+
+            // 当链接对象未找找到服务端成功对接后，提示打开失败，别切单项关闭
+            ws.onclose = function () {
+                inc.innerHTML += '.. connection closed<br/>';
+            }
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                var val = input.value;
+                ws.send(val);
+                input.value = "";
+            });
+
+        }
+        window.onload = start;
+</script>
+    }
