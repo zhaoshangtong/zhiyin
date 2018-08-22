@@ -1,0 +1,42 @@
+@using System.Web.Http
+@using System.Web.Http.Controllers
+@using System.Web.Http.Description
+@using System.Collections.ObjectModel
+@using Zhiyin.Areas.HelpPage.Models
+@model List<string>
+
+@{
+    ViewBag.Title = "接口说明文档";
+
+}
+
+<link type="text/css" href="~/Areas/HelpPage/HelpPage.css" rel="stylesheet" />
+<header class="help-page">
+    <div class="content-wrapper">
+        <div class="float-left">
+            <h1>@ViewBag.Title</h1>
+        </div>
+    </div>
+</header>
+<div id="body" class="help-page">
+    <section class="featured">
+        <div class="content-wrapper">
+            <h2>介绍</h2>
+            <p>
+                在这里提供关于API的描述说明.
+            </p>
+        </div>
+    </section>
+    <section class="content-wrapper main-content clear-fix">
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-3">
+                    <h2>@item</h2>
+                    <p><a class="btn btn-default" href="@Url.Action("ApiList", "Help", new { dirName = item })">查看接口 &raquo;</a></p>
+                </div>
+            }
+        </div>
+    </section>
+
+</div>

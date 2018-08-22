@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Web;
 using System.Web.Http;
 using Zhiyin.Common;
 using Zhiyin.Controllers.Article;
@@ -84,15 +85,18 @@ namespace Zhiyin.Controllers.Article
             return bll.GetArticleInfo(uid,article_id);
         }
 
-        
+
         /// <summary>
         /// 检测作品内容是否包含
         /// </summary>
-        /// <param name="article_content"></param>
+        /// <param>
+        /// formdata:article_content
+        /// </param>
         /// <returns></returns>
-        public ApiResult CheckContent(string article_content)
+        public ApiResult CheckContent()
         {
             ApiResult apiResult = new ApiResult();
+            string article_content = HttpContext.Current.Request.Form["article_content"];
             var checkResult = Util.CheckParameters(
                 new Parameter { Value = article_content, Msg = "article_content 不能为空值" }
                 );
@@ -103,18 +107,13 @@ namespace Zhiyin.Controllers.Article
                 apiResult.message = checkResult.Msg;
                 return apiResult;
             }
-            List<string> minganci_list = new List<string>();
-            minganci_list.Add("你妹的");
-            minganci_list.Add("你大爷的");
-            minganci_list.Add("去你大爷的");
-            minganci_list.Add("傻逼");
-            minganci_list.Add("大傻逼");
-            minganci_list.Add("你妈");
+            BaseBLL<artilce_sensitive_vocabulary> bll = new BaseBLL<artilce_sensitive_vocabulary>();
+            var minganci_list = bll.FindAllList().Select(o => o.vocabulary);
             List<string> mingan_return = new List<string>();
             bool result = true;
             minganci_list.AsParallel().ForAll(o => 
             {
-                if (article_content.Contains(o))
+                if (article_content.ToUpper().Contains(o))
                 {
                     result = false;
                     mingan_return.Add(o);
@@ -180,7 +179,7 @@ namespace Zhiyin.Controllers.Article
                 var competion_season = notice_bll.Find(o => o.is_delete == 0 && o.is_open == 1);
                 competiontion_season_id = competion_season?.competition_season_id??0;
                 //是否已过期
-                if (competion_season.article_collection_start > DateTime.Now)
+                if (competion_season.preliminaries_start_date > DateTime.Now.Date)
                 {
                     return new ApiResult()
                     {
@@ -188,7 +187,7 @@ namespace Zhiyin.Controllers.Article
                         message = "大赛投稿时间还没开始"
                     };
                 }
-                if (competion_season.article_collection_end < DateTime.Now)
+                if (competion_season.preliminaries_end_date < DateTime.Now.Date)
                 {
                     return new ApiResult()
                     {
@@ -226,10 +225,7 @@ namespace Zhiyin.Controllers.Article
                 if (article?.article_id > 0)
                 {
                     //修改
-                    if (Util.isNotNull(_article_pic))
-                    {
-                        article.article_pic= _article_pic;
-                    }
+                    article.article_pic = _article_pic ?? "";
                     article.article_title = _article_title;
                     article.article_content = _article_content;
                     article.create_time = DateTime.Now;
@@ -287,18 +283,10 @@ namespace Zhiyin.Controllers.Article
                         message = "您在当前赛季已经有一份作品了~"
                     };
                 }
-                //新增
-                if (_article_pic == null )
-                {
-                    return new ApiResult()
-                    {
-                        success = false,
-                        message = "插图不能为空"
-                    };
-                }
+                
                 articles article = new articles();
                 //后台自动生成
-                article.article_pic = _article_pic;
+                article.article_pic = _article_pic??"";
                 article.article_title = _article_title;
                 article.article_content = _article_content;
                 article.create_time = DateTime.Now;
@@ -322,7 +310,6 @@ namespace Zhiyin.Controllers.Article
                             update_time = DateTime.Now,
                         });
                         //更新状态表
-                        
                         state_bll.Add(new article_states()
                         {
                             article_id= result.article_id,

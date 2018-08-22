@@ -1,0 +1,365 @@
+﻿using Rays.BLL;
+using Rays.BLL.Article;
+using Rays.Model.DBModels;
+using Rays.Model.Sys;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Web.Http;
+using Zhiyin.Common;
+using Zhiyin.Controllers.Article;
+
+namespace Zhiyin.Controllers.Article
+{
+    /// <summary>
+    /// 作品
+    /// </summary>
+    public class ArticleController : ApiController
+    {
+        /// <summary>
+        /// 获取作品列表(小程序，必须是审核过的)
+        /// </summary>
+        /// <param name="uid">赛区id</param>
+        /// <param name="zone_id">赛区id</param>
+        /// <param name="keyword">作品编号/标题/作者</param>
+        /// <param name="pageIndex"></param>
+        /// <param name="pageSize"></param>
+        /// <returns></returns>
+        public ApiPageResult GetArticleList(int uid,int zone_id=0,string keyword = null, int pageIndex = GloabManager.PAGEINDEX, int pageSize = GloabManager.PAGESIZE)
+        {
+            ApiPageResult apiResult = new ApiPageResult();
+            var checkResult = Util.CheckParameters(
+                new Parameter { Value = uid.ToString(), Msg = "uid 不能为空值" },
+                new Parameter { Value = uid.ToString(), Msg = "uid 必须是数字类型", Regex = @"^[1-9]\d*$" },
+                new Parameter { Value = zone_id.ToString(), Msg = "zone_id 不能为空值" },
+                new Parameter { Value = zone_id.ToString(), Msg = "zone_id 必须是数字类型", Regex = @"^[0-9]\d*$" }
+                );
+            if (!checkResult.OK)
+            {
+                apiResult.success = false;
+                apiResult.status = ApiStatusCode.InvalidParam;
+                apiResult.message = checkResult.Msg;
+                return apiResult;
+            }
+            //查到当前默认开启的赛季
+            BaseBLL<competition_notice> notice_bll = new BaseBLL<competition_notice>();
+            var competion_season = notice_bll.Find(o => o.is_delete == 0 && o.is_open == 1);
+            int competiontion_season_id = competion_season?.competition_season_id ?? 0;
+            if (competiontion_season_id == 0)
+            {
+                return new ApiPageResult()
+                {
+                    success = false,
+                    message = "当前没有开启任何赛季"
+                };
+            }
+            ArticleBLL bll = new ArticleBLL();
+            return bll.GetArticleList(uid,zone_id, competiontion_season_id, keyword,pageIndex,pageSize);
+        }
+        /// <summary>
+        /// 获取作品内容
+        /// </summary>
+        ///  <param name="uid"></param>
+        /// <param name="article_id"></param>
+        /// <returns></returns>
+        public ApiResult GetArticleInfo(int uid,int article_id)
+        {
+            ApiPageResult apiResult = new ApiPageResult();
+            var checkResult = Util.CheckParameters(
+                new Parameter { Value = uid.ToString(), Msg = "uid 不能为空值" },
+                new Parameter { Value = uid.ToString(), Msg = "uid 必须是数字类型", Regex = @"^[1-9]\d*$" },
+                new Parameter { Value = article_id.ToString(), Msg = "article_id 不能为空值" },
+                new Parameter { Value = article_id.ToString(), Msg = "article_id 必须是数字类型", Regex = @"^[1-9]\d*$" }
+                );
+            if (!checkResult.OK)
+            {
+                apiResult.success = false;
+                apiResult.status = ApiStatusCode.InvalidParam;
+                apiResult.message = checkResult.Msg;
+                return apiResult;
+            }
+            ArticleBLL bll = new ArticleBLL();
+            return bll.GetArticleInfo(uid,article_id);
+        }
+
+        
+        /// <summary>
+        /// 检测作品内容是否包含
+        /// </summary>
+        /// <param name="article_content"></param>
+        /// <returns></returns>
+        public ApiResult CheckContent(string article_content)
+        {
+            ApiResult apiResult = new ApiResult();
+            var checkResult = Util.CheckParameters(
+                new Parameter { Value = article_content, Msg = "article_content 不能为空值" }
+                );
+            if (!checkResult.OK)
+            {
+                apiResult.success = false;
+                apiResult.status = ApiStatusCode.InvalidParam;
+                apiResult.message = checkResult.Msg;
+                return apiResult;
+            }
+            List<string> minganci_list = new List<string>();
+            minganci_list.Add("你妹的");
+            minganci_list.Add("你大爷的");
+            minganci_list.Add("去你大爷的");
+            minganci_list.Add("傻逼");
+            minganci_list.Add("大傻逼");
+            minganci_list.Add("你妈");
+            List<string> mingan_return = new List<string>();
+            bool result = true;
+            minganci_list.AsParallel().ForAll(o => 
+            {
+                if (article_content.Contains(o))
+                {
+                    result = false;
+                    mingan_return.Add(o);
+                }
+            });
+            apiResult.success = result;
+            apiResult.data = mingan_return;
+            apiResult.message = result ? "不包含敏感词" : "包含敏感词";
+            return apiResult;
+        }
+
+        #region 上传作品
+        /// <summary>
+        /// 上传作品(一个赛季/一个人只能有一份作品)(必须在作品征集时间段内上传)
+        /// formdata:"article_id":0,"article_title":"xxxx","uid":1,"","article_content":"xxxxx","article_pic":"图片","zone_id"（赛区）:1,"competiontion_season_id"(赛季):1
+        /// </summary>
+        /// <returns></returns>
+
+        public ApiResult UploadArticle()
+        {
+            ApiResult apiResult = new ApiResult();
+            #region 参数检测
+            //var pic = System.Web.HttpContext.Current.Request.Files[0];
+            var _article_pic = System.Web.HttpContext.Current.Request.Form["article_pic"];
+            string _article_id = System.Web.HttpContext.Current.Request.Form["article_id"];
+            string _article_title = System.Web.HttpContext.Current.Request.Form["article_title"];
+            string _uid = System.Web.HttpContext.Current.Request.Form["uid"];
+            string _article_content = System.Web.HttpContext.Current.Request.Form["article_content"];
+            string _zone_id = System.Web.HttpContext.Current.Request.Form["zone_id"];
+            string _competiontion_season_id = System.Web.HttpContext.Current.Request.Form["competiontion_season_id"];
+            LogHelper.Info("zone_id:" + _zone_id);
+            //一个赛季，一个作者，只能有一份作品
+            var checkResult = Util.CheckParameters(
+                new Parameter { Value = _zone_id, Msg = "zone_id 不能为空值" },
+                new Parameter { Value = _zone_id, Msg = "zone_id 必须是数字类型", Regex = @"^[1-9]\d*$" },
+                new Parameter { Value = _uid, Msg = "uid 不能为空值" },
+                new Parameter { Value = _uid, Msg = "uid 必须是数字类型", Regex = @"^[1-9]\d*$" },
+                new Parameter { Value = _article_title, Msg = "article_title 不能为空值" },
+                new Parameter { Value = _article_content, Msg = "article_content 不能为空值" }
+                );
+            if (!checkResult.OK)
+            {
+                apiResult.success = false;
+                apiResult.status = ApiStatusCode.InvalidParam;
+                apiResult.message = checkResult.Msg;
+                return apiResult;
+            }
+            int uid = int.Parse(_uid);
+            int zone_id = int.Parse(_zone_id);
+            int article_id= int.Parse(_article_id);
+            #endregion
+            #region 赛季检查
+            //开启的赛季
+            int competiontion_season_id = 0;
+            if (Util.isNotNull(_competiontion_season_id))
+            {
+                competiontion_season_id= int.Parse(_competiontion_season_id);
+            }
+            else
+            {
+                //查到当前默认开启的赛季
+                BaseBLL<competition_notice> notice_bll = new BaseBLL<competition_notice>();
+                var competion_season = notice_bll.Find(o => o.is_delete == 0 && o.is_open == 1);
+                competiontion_season_id = competion_season?.competition_season_id??0;
+                //是否已过期
+                if (competion_season.article_collection_start > DateTime.Now)
+                {
+                    return new ApiResult()
+                    {
+                        success = false,
+                        message = "大赛投稿时间还没开始"
+                    };
+                }
+                if (competion_season.article_collection_end < DateTime.Now)
+                {
+                    return new ApiResult()
+                    {
+                        success = false,
+                        message = "大赛投稿已截止"
+                    };
+                }
+            }
+            if (competiontion_season_id == 0)
+            {
+                return new ApiResult()
+                {
+                    success=false,
+                    message= "当前没有开启任何赛季"
+                };
+            }
+            #endregion
+            ArticleBLL bll = new ArticleBLL();
+            BaseBLL<article_states> state_bll = new BaseBLL<article_states>();
+            BaseBLL<articles> article_bll = new BaseBLL<articles>();
+            if (article_id > 0)
+            {
+                //判断状态是否可修改
+                int article_state = state_bll.Find(o => o.article_id == article_id)?.article_state ?? 0;
+                if (article_state > 1)
+                {
+                    return new ApiResult()
+                    {
+                        success=false,
+                        message="当前状态不可修改"
+                    };
+                }
+                #region 修改
+                var article = article_bll.Find(o => o.article_id == article_id);
+                if (article?.article_id > 0)
+                {
+                    //修改
+                    if (Util.isNotNull(_article_pic))
+                    {
+                        article.article_pic= _article_pic;
+                    }
+                    article.article_title = _article_title;
+                    article.article_content = _article_content;
+                    article.create_time = DateTime.Now;
+                    article.update_time = DateTime.Now;
+                    if (article_bll.Update(article))
+                    {
+                        //关联表更新
+                        BaseBLL<article_competition_season> article_season_bll = new BaseBLL<article_competition_season>();
+                        var article_competition_season = article_season_bll.Find(o => o.article_id == article_id);
+                        if (article_competition_season?.article_season_id > 0)
+                        {
+                            article_competition_season.zone_id = zone_id;
+                            article_competition_season.competiontion_season_id = competiontion_season_id;
+                            article_competition_season.update_time = DateTime.Now;
+                            article_season_bll.Update(article_competition_season);
+                        }
+                        //更新作品的状态
+                        BaseBLL<article_states> states_bll = new BaseBLL<article_states>();
+                        var article_states = states_bll.Find(o => o.article_id == article_id);
+                        if (article_states?.article_id > 0)
+                        {
+                            article_states.article_state = 0;
+                            article_states.return_remark = "";
+                            article_states.return_tag = "";
+                            article_states.update_time = DateTime.Now;
+                            states_bll.Update(article_states);
+                        }
+                        apiResult.success = true;
+                        apiResult.message = "修改成功";
+                    }
+                    else
+                    {
+                        apiResult.success = false;
+                        apiResult.message = "修改失败";
+                    }
+                    
+                }
+                else
+                {
+                    apiResult.success = false;
+                    apiResult.message = "数据不存在";
+                }
+                #endregion
+            }
+            else
+            {
+                #region 新增
+
+                //是否已存在
+                if (bll.ExistUserArticle(uid, competiontion_season_id))
+                {
+                    return new ApiResult()
+                    {
+                        success = false,
+                        message = "您在当前赛季已经有一份作品了~"
+                    };
+                }
+                //新增
+                //if (_article_pic == null )
+                //{
+                //    return new ApiResult()
+                //    {
+                //        success = false,
+                //        message = "插图不能为空"
+                //    };
+                //}
+                articles article = new articles();
+                //后台自动生成
+                article.article_pic = _article_pic??"";
+                article.article_title = _article_title;
+                article.article_content = _article_content;
+                article.create_time = DateTime.Now;
+                article.uid = uid;
+                article.update_time = DateTime.Now;
+                var result = article_bll.Add(article);
+                if (result?.article_id > 0)
+                {
+                    //更新编号
+                    apiResult = bll.UploadAritcleNo(result);
+                    if (apiResult.success)
+                    {
+                        //更新关联表
+                        BaseBLL<article_competition_season> article_season_bll = new BaseBLL<article_competition_season>();
+                        article_season_bll.Add(new article_competition_season()
+                        {
+                            article_id = result.article_id,
+                            zone_id = zone_id,
+                            competiontion_season_id = competiontion_season_id,
+                            create_time = DateTime.Now,
+                            update_time = DateTime.Now,
+                        });
+                        //更新状态表
+                        
+                        state_bll.Add(new article_states()
+                        {
+                            article_id= result.article_id,
+                            article_state=0,
+                            create_time=DateTime.Now,
+                            update_time=DateTime.Now,
+                        });
+                        apiResult.success = true;
+                        apiResult.message = "保存成功";
+                    }
+                }
+                else
+                {
+                    apiResult.success = false;
+                    apiResult.message = "保存失败";
+                }
+                
+                #endregion
+            }
+            return apiResult;
+        }
+        #endregion
+
+
+        /// <summary>
+        /// 获取十张图片
+        /// </summary>
+        /// <returns></returns>
+        public ApiResult GetArticlePics()
+        {
+            ApiResult apiResult = new ApiResult();
+            BaseBLL<article_pic> pic_bll = new BaseBLL<article_pic>();
+            var article_pics = pic_bll.FindAllList().OrderBy(o=>new { o.topsize ,o.article_pic_id});
+            apiResult.success = true;
+            apiResult.message = "获取十张图片";
+            apiResult.data = article_pics;
+            return apiResult;
+        }
+    }
+}

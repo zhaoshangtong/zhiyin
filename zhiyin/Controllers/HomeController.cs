@@ -26,6 +26,8 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using Rays.Utility.RabbitMQ;
 using Zhiyin.Common.Weixin;
+using Rays.Model.DBModels;
+using System.Web.Http;
 
 namespace Zhiyin.Controllers
 {
@@ -61,6 +63,28 @@ namespace Zhiyin.Controllers
         {
             return View();
         }
-
+        [System.Web.Mvc.HttpPost]
+        public ActionResult AddArticalCi([FromBody]string content)
+        {
+            BaseBLL<artilce_sensitive_vocabulary> bll = new BaseBLL<artilce_sensitive_vocabulary>();
+            string[] array = content.Split(' ');
+            foreach(string ci in array)
+            {
+                if (Util.isNotNull(ci))
+                {
+                    var vocabulary = bll.Find(o => o.vocabulary == ci);
+                    if (vocabulary?.artilce_sensitive_vocabulary_id > 0)
+                    {
+                        continue;
+                    }
+                    bll.Add(new artilce_sensitive_vocabulary()
+                    {
+                        vocabulary = ci,
+                        create_time = DateTime.Now
+                    });
+                }
+            }
+            return new JsonResult() { Data = "上传完成" };
+        }
     }
 }

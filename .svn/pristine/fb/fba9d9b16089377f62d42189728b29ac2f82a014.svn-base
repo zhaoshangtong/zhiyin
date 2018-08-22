@@ -1,0 +1,59 @@
+﻿
+@{
+    ViewBag.Title = "TestApiAouth";
+}
+
+<h2>测试</h2>
+<form>
+    <div>
+        <label class="form-control">ID:</label>
+        <input id="id" name="id" class="form-control" />
+    </div>
+    <div>
+        <label class="form-control">NAME:</label>
+        <input id="name" name="name" class="form-control" />
+    </div>
+    <div>
+        <button id="test" type="button">测试</button>
+    </div>
+</form>
+
+@section scripts{
+    <script src="~/Scripts/md5.js"></script>
+    <script>
+        $(function () {
+            $("#test").on("click", function () {
+                var id=$("#id").val();
+                var name = $("#name").val();
+                var arr = new Array();
+                arr.push("method=GetAllSkins");
+                arr.push("appcode=PHRASE");
+                arr.push("type=");
+                arr.push("pageIndex=1");
+                arr.push("pageSize=100");
+                arr.push("timestamp=" + parseInt(new Date().getTime() / (1000 * 60)));
+                arr.sort();
+                var n_sign = arr.join('&');
+                var sign = hex_md5(n_sign);
+                $.ajax({
+                    url: "http://localhost:51650/api/AppletShop/AdminShop/GetAllSkins?appcode=PHRASE&type=&pageIndex=1&pageSize=100",
+                    type: "get",
+                    dataType: "json",
+                    data: {},
+                    headers: { "sign": sign },
+                    success: function (data) {
+                        if (data.success) {
+                            alert(data.message);
+                        }
+                    },
+                    error: function (data) {
+                        alert(data);
+                    }
+                });
+            });
+        });
+    </script>
+}
+
+
+

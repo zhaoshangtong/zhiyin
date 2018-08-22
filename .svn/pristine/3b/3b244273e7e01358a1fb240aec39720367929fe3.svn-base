@@ -1,0 +1,29 @@
+﻿<div class="jumbotron">
+    <h1>知音投稿</h1>
+    <p class="lead">Rays云是一个强大的建设公开服务和数据 Api的平台，它依据我们rays平台体系，为web和移动端融合的需求提供支持。</p>
+    <p><a href="http://asp.net" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
+</div>
+<div class="row">
+    <div class="col-md-4">
+        <h2>Rays3.0接口</h2>
+        <p>rays3.0基础接口。</p>
+        <p>
+            <a class="btn btn-default" href="http://platform.chubanyun.net/">Learn more &raquo;</a>
+        </p>
+    </div>
+    <div class="col-md-4">
+        <h2>TV统计展示</h2>
+        <p>TV统计了rays平台的交易数据，用户数量以及成交额，浏览量等基础信息。</p>
+        <p>
+            <a class="btn btn-default" href="http://newtv.chubanyun.net">Learn more &raquo;</a>
+        </p>
+    </div>
+    <div class="col-md-4">
+        <h2>CodeBook码书</h2>
+        <p>发现探索我的书，书籍配套资源一扫即获，扫码开启高效阅读模式，专业推荐即时呈现，让生活和学习更简单。</p>
+        <p>
+            <a class="btn btn-default" href="http://www.codebook.com.cn/">Learn more &raquo;</a>
+        </p>
+    </div>
+    
+</div>

@@ -20,6 +20,7 @@
 
         //为您要在模型中包含的每种实体类型都添加 DbSet。有关配置和使用 Code First  模型
         //的详细信息，请参阅 http://go.microsoft.com/fwlink/?LinkId=390109。
+        public DbSet<weixin> weixin { get; set; }
         /// <summary>
         /// 小程序
         /// </summary>
@@ -56,6 +57,10 @@
         /// 投票记录
         /// </summary>
         public  DbSet<vote_record> vote_record { get; set; }
+        /// <summary>
+        /// 用户通知
+        /// </summary>
+        public DbSet<user_notice> user_notices { get; set; }
 
         public  DbSet<adviser> adviser { get; set; }
         public  DbSet<article_states> article_states { get; set; }
@@ -63,6 +68,7 @@
         public DbSet<job_detail> job_detail { get; set; }
         public DbSet<weixin_open> weixin_open { get; set; }
         public DbSet<article_pic> article_pic { get; set; }
+        public DbSet<artilce_sensitive_vocabulary> artilce_sensitive_vocabulary { get; set; }
     }
 
 }

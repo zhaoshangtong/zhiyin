@@ -35,11 +35,11 @@ namespace Zhiyin.Controllers.WebLogin
             string appid = weixin_open.appid;
             string secret = weixin_open.secret;
             string server = Util.getServerPath();
-            string redirect_uri = System.Web.HttpUtility.UrlEncode("http://zhiyin.whtlkj.net/");
+            string redirect_uri = System.Web.HttpUtility.UrlEncode("http://tg.zhiyin.cn/");
             LogHelper.Info("redirect_uri:" + redirect_uri);
             string state = sys.getRandomCode(16);
-            //缓存state
-            HttpContext.Current.Session["weixin_login_state"] = state;
+            ////缓存state
+            //HttpContext.Current.Session["weixin_login_state"] = state;
             WeixinOpenAPI api = new WeixinOpenAPI(appid, secret);
             LogHelper.Info(api.GetCode("登陆的code:" + redirect_uri, state));
             string result = api.GetCode(redirect_uri, state);
@@ -59,8 +59,8 @@ namespace Zhiyin.Controllers.WebLogin
             string secret = weixin_open.secret;
             string state = sys.getRandomCode(16);
             //使用session存state
-            HttpContext.Current.Session["session_weixin_login_state"] = state;
-            CookieHelper.SetCookie("cookie_weixin_login_state", state);
+            //HttpContext.Current.Session["session_weixin_login_state"] = state;
+            //CookieHelper.SetCookie("cookie_weixin_login_state", state);
             apiResult.success = true;
             apiResult.message = "";
             apiResult.data = new { appid, state };
@@ -76,11 +76,11 @@ namespace Zhiyin.Controllers.WebLogin
         {
             ApiResult apiResult = new ApiResult();
             LogHelper.Info("code:" + code + ",state:" + state);
-            //必须用cookie或者session
-            var session = HttpContext.Current.Session["session_weixin_login_state"];
-            string session_state = session == null ? "" : session.ToString();
-            string cookie_state = CookieHelper.GetCookieValue("cookie_weixin_login_state");
-            LogHelper.Info("session_state:" + session_state + ",cookie_state:" + cookie_state);
+            ////必须用cookie或者session
+            //var session = HttpContext.Current.Session["session_weixin_login_state"];
+            //string session_state = session == null ? "" : session.ToString();
+            //string cookie_state = CookieHelper.GetCookieValue("cookie_weixin_login_state");
+            //LogHelper.Info("session_state:" + session_state + ",cookie_state:" + cookie_state);
             //if (state == _state)
             //{
                 BaseBLL<weixin_open> bll = new BaseBLL<weixin_open>();
@@ -182,5 +182,7 @@ namespace Zhiyin.Controllers.WebLogin
             //}
             return apiResult;
         }
+
+        
     }
 }

@@ -11,6 +11,10 @@
     <AssemblyName>Rays.Model</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <SccProjectName>Svn</SccProjectName>
+    <SccLocalPath>Svn</SccLocalPath>
+    <SccAuxPath>Svn</SccAuxPath>
+    <SccProvider>SubversionScc</SccProvider>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -65,13 +69,16 @@
     <Compile Include="DBModels\article_competition_season.cs" />
     <Compile Include="DBModels\article_pic.cs" />
     <Compile Include="DBModels\article_states.cs" />
+    <Compile Include="DBModels\artilce_sensitive_vocabulary.cs" />
     <Compile Include="DBModels\competition_date.cs" />
     <Compile Include="DBModels\competition_notice.cs" />
     <Compile Include="DBModels\competition_zone.cs" />
     <Compile Include="DBModels\iuser.cs" />
     <Compile Include="DBModels\author_info.cs" />
     <Compile Include="DBModels\job_detail.cs" />
+    <Compile Include="DBModels\user_notice.cs" />
     <Compile Include="DBModels\vote_record.cs" />
+    <Compile Include="DBModels\weixin.cs" />
     <Compile Include="DBModels\weixin_applet_code.cs" />
     <Compile Include="DBModels\weixin_applet_log.cs" />
     <Compile Include="DBModels\weixin_open.cs" />

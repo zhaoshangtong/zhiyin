@@ -1,0 +1,28 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width,user-scalable=no,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /> 
+    <title>teacher</title>
+    <link rel="stylesheet" href="../../Poster/template/css/teacher_css.css" />
+</head>
+<body>
+    <div class="container">
+        <div class="top">
+            <img src="{word_img}" alt="">
+        </div>
+        <div class="pig">
+            <div class="user">
+                <img class="touxiang" src="{head_imgurl}" alt="">
+                <span class="title">{nick_name}</span>
+            </div>
+            <div class="word">
+                <div class="left"><p>第{totalCount}份祝福，"感恩教师节"邀您用一个字赞美老师!<br> <span>长按图片识别二维码,送老师祝福</span></p></div>
+                <img class="logo" src="{wxacode}" alt="">
+            </div>
+        </div>
+    </div>
+</body>
+</html>

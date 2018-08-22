@@ -1,0 +1,182 @@
+﻿using Rays.BLL;
+using Rays.Model.DBModels;
+using Rays.Model.Sys;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Web.Http;
+using Rays.BLL.Users;
+using Zhiyin.Common;
+
+namespace Zhiyin.Controllers.Users
+{
+    /// <summary>
+    /// 用户基本信心
+    /// </summary>
+    public class UsersController : ApiController
+    {
+        /// <summary>
+        /// 录入个人信息
+        /// </summary>
+        /// <param name="data">
+        /// {"author_info_id":0,"uid":1,"user_name":"xxx","sex":"男","area":"xxx","school":"xxxx","grade":"一年级","age":9,"phone":"1234567","teacher":"xxx"}
+        /// </param>
+        /// <returns></returns>
+        public ApiResult AddUserInfo(dynamic data)
+        {
+            ApiResult apiResult = new ApiResult();
+            LogHelper.Info("录入个人信息data:" +data);
+            if (Util.isNotNull(data))
+            {
+                LogHelper.Info("录入个人信息data:" + Newtonsoft.Json.JsonConvert.SerializeObject(data));
+                string json = Newtonsoft.Json.JsonConvert.SerializeObject(data);
+                var user = Newtonsoft.Json.JsonConvert.DeserializeObject<author_info>(json);
+                LogHelper.Info("录入个人信息user:" + Newtonsoft.Json.JsonConvert.SerializeObject(user));
+                if (user == null||user.uid==0)
+                {
+                    return new ApiResult()
+                    {
+                        success = false,
+                        message = "参数错误"
+                    };
+                }
+
+                BaseBLL<author_info> bll = new BaseBLL<author_info>();
+                if (user.author_info_id > 0)
+                {
+                    var _user = bll.Find(o => o.author_info_id == user.author_info_id);
+                    if (_user?.author_info_id > 0)
+                    {
+                        user.update_time = DateTime.Now;
+                        user.create_time = _user.create_time;
+                        user.uid = _user.uid;
+                        bll.Update(user);
+                    }
+                    else
+                    {
+                        return new ApiResult()
+                        {
+                            success = false,
+                            message="修改失败"
+                        };
+                    }
+                }
+                else
+                {
+                    user.create_time = DateTime.Now;
+                    user.update_time = DateTime.Now;
+                    bll.Add(user);
+                }
+                apiResult.success = true;
+                apiResult.message = "成功";
+            }
+            else
+            {
+                apiResult.success = false;
+                apiResult.message = "参数错误";
+            }
+            
+            return apiResult;
+        }
+
+        /// <summary>
+        /// 获取个人信息
+        /// </summary>
+        /// <param name="uid"></param>
+        /// <returns></returns>
+
+        public ApiResult GetUserInfo(int uid)
+        {
+            ApiResult apiResult = new ApiResult();
+            BaseBLL<author_info> info_bll = new BaseBLL<author_info>();
+            var author_info = info_bll.Find(o => o.uid == uid);
+            if (author_info?.author_info_id > 0)
+            {
+                apiResult.success = true;
+                apiResult.message = "获取个人信息";
+                apiResult.data = author_info;
+            }
+            else
+            {
+                apiResult.success = false;
+                apiResult.message = "未获取个人信息";
+            }
+            return apiResult;
+        }
+
+        /// <summary>
+        /// 我的作品（默认当前开启的赛季的作品）
+        /// </summary>
+        /// <param name="uid"></param>
+        /// <param name="img_count">取几个头像</param>
+        /// <param name="competiontion_season_id">赛季id，没有就不传</param>
+        /// <returns></returns>
+        public ApiResult GetMyArticle(int uid, int img_count = 4, int competiontion_season_id = 0)
+        {
+            ApiResult apiResult = new ApiResult();
+            //查到当前默认开启的赛季
+            BaseBLL<competition_notice> notice_bll = new BaseBLL<competition_notice>();
+            var competion_season = notice_bll.Find(o => o.is_delete == 0 && o.is_open == 1);
+            competiontion_season_id = competion_season?.competition_season_id ?? 0;
+            if (competiontion_season_id == 0)
+            {
+                return new ApiResult()
+                {
+                    success = false,
+                    message = "当前没有开启任何赛季"
+                };
+            }
+            UsersBLL bll = new UsersBLL();
+            return bll.GetMyArticle(uid, img_count, competiontion_season_id);
+        }
+        /// <summary>
+        /// 给我投票的观众
+        /// </summary>
+        /// <param name="article_id">作品id</param>
+        /// <returns></returns>
+        public ApiResult GetVoteToMeUsers(int article_id)
+        {
+            ApiResult apiResult = new ApiResult();
+            var checkResult = Util.CheckParameters(
+                new Parameter { Value = article_id.ToString(), Msg = "article_id 必须为数字", Regex = @"^[1-9]\d*$" },
+                new Parameter { Value = article_id.ToString(), Msg = "article_id 不能为空值" }
+                );
+            if (!checkResult.OK)
+            {
+                apiResult.success = false;
+                apiResult.status = ApiStatusCode.InvalidParam;
+                apiResult.message = checkResult.Msg;
+                return apiResult;
+            }
+            UsersBLL bll = new UsersBLL();
+            return bll.GetVoteToMeUsers(article_id);
+        }
+
+        /// <summary>
+        /// 我的投票记录
+        /// </summary>
+        /// <param name="uid"></param>
+        /// <param name="pageIndex"></param>
+        /// <param name="pageSize"></param>
+        /// <returns></returns>
+        public ApiPageResult GetMyVoteRecord(int uid,int pageIndex = GloabManager.PAGEINDEX, int pageSize = GloabManager.PAGESIZE)
+        {
+            ApiPageResult apiResult = new ApiPageResult();
+            var checkResult = Util.CheckParameters(
+                 new Parameter { Value = uid.ToString(), Msg = "zone_id 不能为空值" },
+                new Parameter { Value = uid.ToString(), Msg = "zone_id 必须是数字类型", Regex = @"^[1-9]\d*$" }
+                );
+            if (!checkResult.OK)
+            {
+                apiResult.success = false;
+                apiResult.status = ApiStatusCode.InvalidParam;
+                apiResult.message = checkResult.Msg;
+                return apiResult;
+            }
+            UsersBLL bll = new UsersBLL();
+            return bll.GetMyVoteRecord(uid, pageIndex, pageSize);
+        }
+    }
+}
